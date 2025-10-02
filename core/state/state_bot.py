@@ -65,7 +65,7 @@ class BotState:
     def should_prioritize_g1(self) -> bool:
         """Should prioritize G1 races based on config and current state"""
         return (
-            config.PRIORITIZE_G1_RACE and not self.is_junior_year and not self.is_summer
+            config.PRIORITIZE_G1_RACE and not self.is_summer
         )
 
     @property
