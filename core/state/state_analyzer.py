@@ -99,14 +99,25 @@ class StateAnalyzer:
         img = helper.enhance_img(img)
         turn_text = self.ocr.extract_text(img)
 
-        if "Race Day" in turn_text:
+        log.debug(f"Raw turn text: '{turn_text}'")
+
+        if "Race" in turn_text or "Day" in turn_text:
+            return "Race Day"
+
+        if not turn_text:
+            return -1
+
+        # Fuzzy matching for safety
+        race_day_distance = self._levenshtein_distance(turn_text.upper(), "RACE DAY")
+        threshold = 3
+
+        if race_day_distance <= threshold:
+            log.debug(f"Fuzzy matched turn: {turn_text}, distance: {race_day_distance}")
             return "Race Day"
 
         cleaned_text = turn_text
         for wrong, correct in self.digit_replacement.items():
             cleaned_text = cleaned_text.replace(wrong, correct)
-
-        log.debug(f"Turn text: '{turn_text}'")
 
         # Extract digits
         match_digits = re.search(r"(\d+)", cleaned_text)

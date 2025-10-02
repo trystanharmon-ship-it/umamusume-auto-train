@@ -30,6 +30,7 @@ class BotState:
     def is_junior_year(self) -> bool:
         return "Junior" in self.year
 
+    @property
     def is_pre_debut(self) -> bool:
         return "Pre" in self.year or "Debut" in self.year
 
@@ -75,7 +76,7 @@ class BotState:
     def should_race_for_goals(self) -> bool:
         """Should race for fan/maiden goals"""
         return (
-            "Pre-Debut" not in self.year
+            not self.is_pre_debut
             and self.turn < 10
             and ("fan" in self.criteria or "Maiden" in self.criteria)
         )
