@@ -51,7 +51,6 @@ class SkillBuyer:
             if self.matcher.is_skill_match(skill_text, skill_list):
                 if self._can_buy_skill((x, y, w, h), screen):
                     self._buy_skill_at_position(x, y)
-                    return True
                 else:
                     info(f"{skill_text} found but not enough skill points.")
 
