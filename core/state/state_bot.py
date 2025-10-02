@@ -72,7 +72,7 @@ class BotState:
     def should_race_for_goals(self) -> bool:
         """Should race for fan/maiden goals"""
         return (
-            self.year != "Junior Year Pre-Debut"
+            "Pre-Debut" not in self.year
             and self.turn < 10
             and ("fan" in self.criteria or "Maiden" in self.criteria)
         )

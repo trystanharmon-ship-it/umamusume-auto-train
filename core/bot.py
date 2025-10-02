@@ -133,11 +133,13 @@ class Bot:
                 info("Mood is low, trying recreation to increase mood")
                 self.navigation.do_recreation(state.is_summer)
                 continue
-            elif state.should_prioritize_g1:
+
+            if state.should_prioritize_g1:
                 debug("Should prioritize G1!")
                 if self._handle_g1_race(state):
                     continue
-            elif state.should_race_for_goals:
+
+            if state.should_race_for_goals:
                 debug("Race Goal!!")
                 if self._handle_goal_race():
                     continue
