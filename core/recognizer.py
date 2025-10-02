@@ -1,108 +1,247 @@
+# core/recognizer.py
 import cv2
 import numpy as np
-from PIL import ImageGrab, ImageStat
+import time
 
-from utils.log import info, warning, error, debug
-from utils.screenshot import capture_region
+from utils.log import debug, error
+from utils.adb_helper import ADB
+from utils import helper
 
-def match_template(template_path, region=None, threshold=0.85):
-  # Get screenshot
-  if region:
-    screen = np.array(ImageGrab.grab(bbox=region))  # (left, top, right, bottom)
-  else:
-    screen = np.array(ImageGrab.grab())
-  screen = cv2.cvtColor(screen, cv2.COLOR_RGB2BGR)
 
-#  cv2.namedWindow("image")
-#  cv2.moveWindow("image", -900, 0)
-#  cv2.imshow("image", screen)
-#  cv2.waitKey(5)
+class Recognizer:
+    def __init__(self, threshold=0.8, adb: ADB = None):
+        self.adb = adb
+        self.threshold = threshold
 
-  # Load template
-  template = cv2.imread(template_path, cv2.IMREAD_COLOR)  # safe default
-  if template.shape[2] == 4:
-    template = cv2.cvtColor(template, cv2.COLOR_BGRA2BGR)
-  result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
-  loc = np.where(result >= threshold)
+    def deduplicate_boxes(self, boxes, min_dist=5):
+        """
+        Remove overlapping or very close bounding boxes by checking center distances.
+        """
+        filtered = []
+        for x, y, w, h in boxes:
+            cx, cy = x + w // 2, y + h // 2
+            if all(
+                abs(cx - (fx + fw // 2)) > min_dist
+                or abs(cy - (fy + fh // 2)) > min_dist
+                for fx, fy, fw, fh in filtered
+            ):
+                filtered.append((x, y, w, h))
+        return filtered
 
-  h, w = template.shape[:2]
-  boxes = [(x, y, w, h) for (x, y) in zip(*loc[::-1])]
+    def match_template(self, region=None, template_path: str = None, screen=None):
+        """
+        Perform template matching on the given screen.
 
-  return deduplicate_boxes(boxes)
+        Returns:
+            list of (x, y, w, h) bounding boxes
+        Args:
+            region: optional crop region (x, y, w, h)
+            template_path: path to template image
+            screen: screenshot image as np.array
+        """
+        if screen is None:
+            raise ValueError("No screen value provided.")
 
-def multi_match_templates(templates, screen=None, threshold=0.85):
-  if screen is None:
-    screen = ImageGrab.grab()
-  screen_bgr = cv2.cvtColor(np.array(screen), cv2.COLOR_RGB2BGR)
+        if region:
+            screen = helper.crop_screen(screen, region)
 
-  results = {}
-  for name, path in templates.items():
-    template = cv2.imread(path, cv2.IMREAD_COLOR)
-    if template is None:
-      results[name] = []
-      continue
-    if template.shape[2] == 4:
-      template = cv2.cvtColor(template, cv2.COLOR_BGRA2BGR)
+        # Load template
+        template = cv2.imread(template_path, cv2.IMREAD_COLOR)
+        if template.shape[2] == 4:
+            template = cv2.cvtColor(template, cv2.COLOR_BGRA2BGR)
 
-    result = cv2.matchTemplate(screen_bgr, template, cv2.TM_CCOEFF_NORMED)
-    loc = np.where(result >= threshold)
-    h, w = template.shape[:2]
-    boxes = [(x, y, w, h) for (x, y) in zip(*loc[::-1])]
-    results[name] = boxes
-  return results
+        result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(result >= self.threshold)
 
-def deduplicate_boxes(boxes, min_dist=5):
-  filtered = []
-  for x, y, w, h in boxes:
-    cx, cy = x + w // 2, y + h // 2
-    if all(abs(cx - (fx + fw // 2)) > min_dist or abs(cy - (fy + fh // 2)) > min_dist
-        for fx, fy, fw, fh in filtered):
-      filtered.append((x, y, w, h))
-  return filtered
+        h, w = template.shape[:2]
+        boxes = [(x, y, w, h) for (x, y) in zip(*loc[::-1])]
 
-def is_btn_active(region, treshold = 150):
-  screenshot = capture_region(region)
-  grayscale = screenshot.convert("L")
-  stat = ImageStat.Stat(grayscale)
-  avg_brightness = stat.mean[0]
+        boxes = self.deduplicate_boxes(boxes)
 
-  # Treshold btn
-  return avg_brightness > treshold
+        return boxes
 
-def count_pixels_of_color(color_rgb=[117,117,117], region=None, tolerance=2):
-    # [117,117,117] is gray for missing energy, we go 2 below and 2 above so that it's more stable in recognition
-    if region:
-        screen = np.array(ImageGrab.grab(bbox=region))  # (left, top, right, bottom)
-    else:
-        return -1
+    def multi_match_templates(self, templates, screen=None):
+        """
+        Match multiple templates at once.
 
-    color = np.array(color_rgb, np.uint8)
+        Returns:
+            dict[name] = list of (x, y, w, h) matches
+        Args:
+            templates: dict[name] = template_path
+            screen: screenshot image as np.array
+        """
+        if screen is None:
+            raise ValueError("No screen value provided.")
 
-    # define min/max range ±2
-    color_min = np.clip(color - tolerance, 0, 255)
-    color_max = np.clip(color + tolerance, 0, 255)
+        results = {}
+        sh, sw = screen.shape[:2]
 
-    dst = cv2.inRange(screen, color_min, color_max)
-    pixel_count = cv2.countNonZero(dst)
-    return pixel_count
+        for name, path in templates.items():
+            template = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+            if template is None or template.size == 0:
+                error(f"[{name}] Failed to load template from {path}")
+                results[name] = []
+                continue
 
-def find_color_of_pixel(region=None):
-  if region:
-    #we can only return one pixel's color here, so we take the x, y and add 1 to them
-    region = (region[0], region[1], region[0]+1, region[1]+1)
-    screen = np.array(ImageGrab.grab(bbox=region))  # (left, top, right, bottom)
-    return screen[0]
-  else:
-    return -1
+            # Convert template if it has an alpha channel
+            if template.shape[2] == 4:
+                template = cv2.cvtColor(template, cv2.COLOR_BGRA2BGR)
 
-def closest_color(color_dict, target_color):
-    closest_name = None
-    min_dist = float('inf')
-    target_color = np.array(target_color)
-    for name, col in color_dict.items():
-        col = np.array(col)
-        dist = np.linalg.norm(target_color - col)  # Euclidean distance
-        if dist < min_dist:
-            min_dist = dist
-            closest_name = name
-    return closest_name
+            th, tw = template.shape[:2]
+            if th > sh or tw > sw:
+                results[name] = []
+                continue
+
+            # Perform color-based template matching
+            result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+
+            if max_val >= self.threshold:
+                x, y = max_loc
+                results[name] = [(x, y, tw, th)]
+            else:
+                results[name] = []
+
+        return results
+
+    def locate_on_screen(self, template_path, region=None, max_search_time=5.0):
+        """
+        Continuously search for a template within a time limit.
+
+        Returns:
+            (x, y, w, h) or None
+        Args:
+            template_path: str, path to template
+            region: optional crop (left, top, right, bottom)
+            max_search_time: float, timeout in seconds
+        """
+        start = time.time()
+
+        while True:
+            screen = self.adb.screenshot(crop=region)
+
+            if screen is None or screen.size == 0:
+                raise ValueError("No screen value provided")
+
+            screen_bgr = cv2.cvtColor(screen, cv2.COLOR_RGB2BGR)
+
+            # Load template
+            template = cv2.imread(template_path, cv2.IMREAD_COLOR)
+            if template is None:
+                return None
+            if template.shape[2] == 4:
+                template = cv2.cvtColor(template, cv2.COLOR_BGRA2BGR)
+
+            h, w = template.shape[:2]
+            screen_gray = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
+            template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+            result = cv2.matchTemplate(screen_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+            _, max_val, _, max_loc = cv2.minMaxLoc(result)
+
+            if max_val >= self.threshold:
+                found = (max_loc[0], max_loc[1], w, h)
+                debug(f"{template_path} with confidence={max_val:.2f}")
+                return found
+            else:
+                debug(f"Searching {template_path}... confidence={max_val:.2f}")
+
+            if time.time() - start >= max_search_time:
+                return None
+
+            time.sleep(0.05)
+
+    def is_btn_active(self, region=None, threshold=150, screen=None):
+        """
+        Determine if a button is active by analyzing its brightness.
+
+        Returns:
+            bool
+        Args:
+            region: (x, y, w, h)
+            threshold: brightness threshold
+            screen: screenshot np.array
+        """
+        if screen is None or screen.size == 0:
+            screen = self.adb.screenshot()
+
+        img = helper.crop_screen(screen, region)
+
+        if img.size == 0:
+            error("is_btn_active: Cropped region is empty")
+            return False
+
+        grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        avg_brightness = np.mean(grayscale)
+
+        debug(f"Button brightness: {avg_brightness:.2f}, threshold: {threshold}")
+        return avg_brightness > threshold
+
+    def count_pixels_of_color(
+        self, color_rgb=[117, 117, 117], region=None, tolerance=2, screen=None
+    ):
+        """
+        Count pixels within a region that match a given color (with tolerance).
+
+        Returns:
+            int, number of pixels matching
+        Args:
+            color_rgb: reference color in RGB
+            region: (x, y, w, h)
+            tolerance: range around the reference color
+            screen: screenshot np.array
+        """
+        if region:
+            cropped = helper.crop_screen(screen, region)
+        else:
+            return -1
+
+        color = np.array(color_rgb, np.uint8)
+
+        # Define min/max range ± tolerance
+        color_min = np.clip(color - tolerance, 0, 255)
+        color_max = np.clip(color + tolerance, 0, 255)
+
+        dst = cv2.inRange(cropped, color_min, color_max)
+        pixel_count = cv2.countNonZero(dst)
+        return pixel_count
+
+    def find_color_of_pixel(self, region=None, screen=None):
+        """
+        Find the color of the central pixel within a cropped region.
+
+        Args:
+            region: (x, y, w, h)
+            screen: screenshot np.array
+        Returns:
+            [R, G, B] list
+        """
+        if region:
+            cropped = helper.crop_screen(screen, region)
+            cx = cropped.shape[1] // 2
+            cy = cropped.shape[0] // 2
+            b, g, r = cropped[cy, cx]
+            return [r, g, b]
+        else:
+            return -1
+
+    @staticmethod
+    def closest_color(color_dict, target_color):
+        """
+        Find the closest color name from a dictionary based on Euclidean distance.
+
+        Args:
+            color_dict: dict[name] = [R, G, B]
+            target_color: [R, G, B]
+        Returns:
+            str, closest color name
+        """
+        closest_name = None
+        min_dist = float("inf")
+        target_color = np.array(target_color)
+        for name, col in color_dict.items():
+            col = np.array(col)
+            dist = np.linalg.norm(target_color - col)
+            if dist < min_dist:
+                min_dist = dist
+                closest_name = name
+        return closest_name

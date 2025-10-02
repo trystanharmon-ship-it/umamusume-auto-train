@@ -1,25 +1,28 @@
-import easyocr
-from PIL import Image
-import numpy as np
+# core/ocr.py
 import re
+import numpy as np
+import pytesseract
 
-reader = easyocr.Reader(["en"], gpu=False)
 
-def extract_text(pil_img: Image.Image) -> str:
-  img_np = np.array(pil_img)
-  result = reader.readtext(img_np)
-  texts = [text[1] for text in result]
-  return " ".join(texts)
+class OCR:
+    def __init__(self):
+        # Path to tesseract.exe
+        pytesseract.pytesseract.tesseract_cmd = (
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+        )
 
-def extract_number(pil_img: Image.Image) -> int:
-  img_np = np.array(pil_img)
-  result = reader.readtext(img_np, allowlist="0123456789")
-  texts = [text[1] for text in result]
-  joined_text = "".join(texts)
+    def extract_text(self, img: np.ndarray) -> str:
+        """Extract text"""
+        config = r"--oem 3 --psm 6"
+        text = pytesseract.image_to_string(img, lang="eng", config=config)
+        return text.strip()
 
-  digits = re.sub(r"[^\d]", "", joined_text)
+    def extract_number(self, img: np.ndarray) -> int:
+        """Extract number (digit only)"""
 
-  if digits:
-    return int(digits)
-  
-  return -1
+        digit_config = r"--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789"
+        text = pytesseract.image_to_string(img, lang="eng", config=digit_config)
+
+        # Cleanup for safety
+        digits = re.sub(r"[^\d]", "", text)
+        return int(digits) if digits else -1

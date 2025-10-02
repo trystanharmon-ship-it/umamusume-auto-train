@@ -15,6 +15,16 @@ Join our [discord server](https://discord.gg/vKKmYUNZuk)
 I am not responsible for any issues, account bans, or losses that may occur from using it.
 Use responsibly and at your own discretion.
 
+## Emulator Branch
+
+This branch is dedicated for emulator use.
+For the Steam version, please check the [main branch](https://github.com/samsulpanjul/umamusume-auto-train).
+
+⚠️ This branch is still under development, so you may encounter errors or bugs.
+If you run into any issues, feel free to open an issue
+or join our [Discord server](https://discord.gg/vKKmYUNZuk)
+for discussion.
+
 ## Features
 
 - Automatically trains Uma
@@ -33,14 +43,29 @@ Use responsibly and at your own discretion.
 ### Requirements
 
 - [Python 3.10+](https://www.python.org/downloads/)
+- [TesseractOCR](https://github.com/UB-Mannheim/tesseract/wiki)
 
 ### Setup
+
+#### OCR Setup
+
+1. Download the installer from [UB Mannheim Tesseract build](https://github.com/UB-Mannheim/tesseract/wiki).
+2. Install it (default path usually: `C:\Program Files\Tesseract-OCR`).
+
+**Note**: If pytesseract cannot find tesseract.exe, you may need to explicitly set the path in your code. Edit `core/ocr.py` (line 11):
+
+```
+pytesseract.pytesseract.tesseract_cmd = r"D:\Your\Custom\Path\tesseract.exe"
+```
 
 #### Clone repository
 
 ```
 git clone https://github.com/samsulpanjul/umamusume-auto-train.git
+
 cd umamusume-auto-train
+
+git checkout -b emulator origin/emulator
 ```
 
 #### Install dependencies
@@ -53,16 +78,10 @@ pip install -r requirements.txt
 
 Make sure these conditions are met:
 
-- Screen resolution must be 1920x1080
-- The game should be in fullscreen
-- Your Uma must have already won the trophy for each race (the bot will skips the race)
-- Turn off all confirmation pop-ups in game settings
-- The game must be in the career lobby screen (the one with the Tazuna hint icon)
-
-### Bluestacks Settings
-
-1. Set custom display size of 800x1080 and DPI to 160.
-2. Make sure to set the window name in the config to match your emulator’s window title exactly. (case-sensitive)
+- **Disable** all confirmation pop-ups in the game settings.
+- **Stay** in the career lobby screen (the one with the Tazuna hint icon).
+- **Enable** ADB Debugging on your emulator.
+- **Set** the emulator resolution to **800x1080**.
 
 ### Start
 
