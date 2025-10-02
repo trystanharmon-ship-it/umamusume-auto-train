@@ -30,6 +30,9 @@ class BotState:
     def is_junior_year(self) -> bool:
         return "Junior" in self.year
 
+    def is_pre_debut(self) -> bool:
+        return "Pre" in self.year or "Debut" in self.year
+
     @property
     def is_summer(self) -> bool:
         return not self.is_junior_year and ("Jul" in self.year or "Aug" in self.year)
@@ -65,7 +68,7 @@ class BotState:
     def should_prioritize_g1(self) -> bool:
         """Should prioritize G1 races based on config and current state"""
         return (
-            config.PRIORITIZE_G1_RACE and not self.is_summer
+            config.PRIORITIZE_G1_RACE and not self.is_summer and not self.is_pre_debut
         )
 
     @property
