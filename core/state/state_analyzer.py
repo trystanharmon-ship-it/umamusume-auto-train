@@ -4,7 +4,6 @@ from .state_bot import BotState
 from core.ocr import OCR
 from core.recognizer import Recognizer
 from utils import helper, constants, log
-import cv2
 
 class StateAnalyzer:
     def __init__(self, ocr: OCR, recognizer: Recognizer):
@@ -17,6 +16,7 @@ class StateAnalyzer:
             "l": "1",
             "[": "1",
             "]": "1",
+            "|": "1",
             "S": "5",
             "s": "5",
             "Z": "2",
@@ -96,7 +96,7 @@ class StateAnalyzer:
 
     def _check_turn(self, screen):
         img = helper.crop_screen(screen, constants.TURN_REGION)
-        img = helper.enhance_img(img)
+        img = helper.enhance_img(img, threshold=200)
         turn_text = self.ocr.extract_text(img)
 
         log.debug(f"Raw turn text: '{turn_text}'")
