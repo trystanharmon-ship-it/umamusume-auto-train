@@ -50,7 +50,7 @@ class SkillBuyer:
 
             if self.matcher.is_skill_match(skill_text, skill_list):
                 if self._can_buy_skill((x, y, w, h), screen):
-                    self._buy_skill_at_position(x, y)
+                    self._buy_skill_at_position(x, y, skill_text)
                 else:
                     info(f"{skill_text} found but not enough skill points.")
 
@@ -68,9 +68,10 @@ class SkillBuyer:
             button_region, threshold=100, screen=screen
         )
 
-    def _buy_skill_at_position(self, x: int, y: int):
+    def _buy_skill_at_position(self, x: int, y: int, skill_text):
         """Buy skill at specific position"""
         self.interaction.click_coordinates(x + 5, y + 5)
+        info(f"Buying {skill_text}")
         self.found_skill = True
 
     def _scroll_skills(self):
