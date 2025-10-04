@@ -19,11 +19,11 @@ class TrainingStrategy:
         if not filtered_data:
             info("No safe training found.")
 
-        if "Junior Year" in year:
-            return self._most_support_card(results, energy_level)
+        if "Junior" in year:
+            return self._most_support_card(filtered_data, energy_level)
         else:
-            result = self._rainbow_training(results)
-            return result if result else self._most_support_card(results, energy_level)
+            result = self._rainbow_training(filtered_data)
+            return result if result else self._most_support_card(filtered_data, energy_level)
 
     def _filter_by_stat_caps(self, results, current_stats):
         return {
@@ -123,8 +123,12 @@ class TrainingStrategy:
                 )
                 return best_key
             else:
-                info("Low value training (only 1 support). Choosing to rest.")
-                return None
+                if energy_level > config.NEVER_REST_ENERGY:
+                    info(f"Energy is over {config.NEVER_REST_ENERGY}, train anyway.")
+                    return best_key
+                else:
+                    info("Low value training (only 1 support). Choosing to rest.")
+                    return None
 
         info(
             f"Best training: {best_key.upper()} with {best_data['total_supports']} support cards and {best_data['failure']}% fail chance"
