@@ -19,7 +19,6 @@ class RaceManager:
 
         self.position_manager = PositionManager(interaction, ocr)
         self.race_executor = RaceExecutor(interaction, self.position_manager)
-        self.consecutive_races_canceled = False
 
     def handle_race_day(self, is_finale: bool = False) -> bool:
         """Handle race day flow"""
@@ -40,6 +39,8 @@ class RaceManager:
         if not self._handle_consecutive_races():
             return False
 
+        sleep(0.5)
+
         strategy = G1RaceStrategy(self.interaction, self.navigation, race_name)
         return self._execute_race_strategy(strategy)
 
@@ -51,6 +52,8 @@ class RaceManager:
         if not self._handle_consecutive_races():
             return False
 
+        sleep(0.5)
+
         strategy = AptitudeRaceStrategy(self.interaction, self.navigation)
         return self._execute_race_strategy(strategy)
 
@@ -58,22 +61,19 @@ class RaceManager:
         """Generic race navigation and execution"""
         # Navigate to race screen
         if not self.interaction.click_element(
-            assets_repository.get_button(button_name), 
-            max_search_time=get_secs(10)
+            assets_repository.get_button(button_name), max_search_time=get_secs(10)
         ):
             return False
 
         self.interaction.click_element(
-            assets_repository.get_button("ok_btn"), 
-            max_search_time=get_secs(1)
+            assets_repository.get_button("ok_btn"), max_search_time=get_secs(1)
         )
         sleep(0.5)
 
         # Race button clicks
         for i in range(2):
             if not self.interaction.click_element(
-                assets_repository.get_button("race_btn"), 
-                max_search_time=get_secs(2)
+                assets_repository.get_button("race_btn"), max_search_time=get_secs(2)
             ):
                 return False
             sleep(0.5)
@@ -98,13 +98,11 @@ class RaceManager:
 
         if config.CANCEL_CONSECUTIVE_RACE:
             info("Cancelling consecutive race, doing training instead.")
-            return self.interaction.click_element(
-                assets_repository.get_button("cancel_btn")
-            )
+            self.interaction.click_element(assets_repository.get_button("cancel_btn"))
+            return False
         else:
-            return self.interaction.click_element(
-                assets_repository.get_button("ok_btn")
-            )
+            self.interaction.click_element(assets_repository.get_button("ok_btn"))
+            return True
 
     def _execute_race_strategy(self, strategy) -> bool:
         """Execute race selection strategy"""

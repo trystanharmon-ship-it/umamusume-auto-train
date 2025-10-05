@@ -38,7 +38,7 @@ class G1RaceStrategy(RaceStrategy):
         """Try to select the target race"""
         if self.interaction.click_element(
             assets_repository.get_race(self.race_name),
-            max_search_time=get_secs(0.7),
+            max_search_time=get_secs(1),
             text=f"{self.race_name} found.",
         ):
             return self._confirm_race_selection()
@@ -70,7 +70,7 @@ class AptitudeRaceStrategy(RaceStrategy):
     def _try_find_aptitude_race(self) -> bool:
         """Try to find aptitude matching race"""
         match_aptitude = self.interaction.recognizer.locate_on_screen(
-            assets_repository.get_ui("match_track"), max_search_time=get_secs(0.7)
+            assets_repository.get_ui("match_track"), max_search_time=get_secs(1)
         )
 
         if not match_aptitude:

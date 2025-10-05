@@ -179,11 +179,6 @@ class Bot:
                     if self.race.handle_g1_race(race_list["name"]):
                         race_done = True
                         break
-                    else:
-                        self.navigation.go_back(
-                            f"{race_list['name']} race not found. Proceeding to training."
-                        )
-                        sleep(0.5)
         return race_done
 
     def _handle_goal_race(self) -> bool:
@@ -192,7 +187,6 @@ class Bot:
         if race_found:
             return True
         else:
-            self.navigation.go_back("Proceeding to training.")
             sleep(0.5)
             return False
 
