@@ -17,7 +17,7 @@ class EventMatcher:
         for event in event_list:
             event_name = event["event_name"]
             clean_text = re.sub(
-                r"\s*\([^)]*\)", "", event_name
+                r"\s*\((?!Year 2\))[^\)]*\)", "", event_name
             ).strip()  # remove parentheses
             clean_text = re.sub(r"[^\x00-\x7F]", "", clean_text)  # remove non-ASCII
             similarity = Levenshtein.ratio(text.lower(), clean_text.lower())

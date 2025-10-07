@@ -63,14 +63,14 @@ class EventManager:
         debug(f"Best event name match: {best_event_name}, similarity: {similarity}")
 
         if similarity >= self.threshold:
-            debug(
-                f"Event found: {event_name} has {similarity * 100:.2f}% similarity with {best_event_name}"
-            )
             events = next(
                 (e for e in config.EVENT_CHOICES if e["event_name"] == best_event_name),
                 None,  # fallback
             )
-            debug(f"event name: {best_event_name}, chosen: {events['chosen']}")
+            debug(
+                f"Event found: {event_name} has {similarity * 100:.2f}% similarity with {events['event_name']}"
+            )
+            debug(f"event name: {events['event_name']}, chosen: {events['chosen']}")
             choice = events["chosen"]
             return choice
         else:
