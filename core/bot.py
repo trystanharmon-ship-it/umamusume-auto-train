@@ -13,6 +13,7 @@ from core.actions import (
     TrainingManager,
     SkillManager,
     RaceManager,
+    EventManager,
 )
 
 
@@ -42,6 +43,7 @@ class Bot:
 
         self.skill = SkillManager(self.interaction, self.ocr, self.navigation)
         self.infirmary_manager = InfirmaryManager(self.interaction, self.state_analyzer)
+        self.event = EventManager(self.interaction, self.ocr)
         self.race = RaceManager(self.interaction, self.navigation, self.ocr)
 
         self.preferred_position_set = False
@@ -65,9 +67,7 @@ class Bot:
             # 2. Handle UI elements
             matches = self.recognizer.multi_match_templates(self.templates, screen)
 
-            if self.interaction.click_boxes(
-                matches["event"], text="Event found, selecting top choice."
-            ):
+            if self.event.select_event(screen):
                 continue
             if self.interaction.click_boxes(
                 matches["inspiration"], text="Inspiration found."

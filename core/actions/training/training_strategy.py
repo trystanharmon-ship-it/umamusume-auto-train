@@ -23,7 +23,11 @@ class TrainingStrategy:
             return self._most_support_card(filtered_data, energy_level)
         else:
             result = self._rainbow_training(filtered_data)
-            return result if result else self._most_support_card(filtered_data, energy_level)
+            return (
+                result
+                if result
+                else self._most_support_card(filtered_data, energy_level)
+            )
 
     def _filter_by_stat_caps(self, results, current_stats):
         return {

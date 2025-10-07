@@ -5,6 +5,7 @@ from .infirmary.infirmary_manager import InfirmaryManager
 from .skill.skill_manager import SkillManager
 from .training.training_manager import TrainingManager
 from .race.race_manager import RaceManager
+from .event.event_manager import EventManager
 
 __all__ = [
     "Input",
@@ -14,4 +15,5 @@ __all__ = [
     "SkillManager",
     "TrainingManager",
     "RaceManager",
+    "EventManager",
 ]
