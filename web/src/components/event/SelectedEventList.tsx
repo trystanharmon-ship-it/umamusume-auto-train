@@ -24,13 +24,14 @@ export default function SelectedEventList({ data, groupedChoices, eventChoicesCo
 
   const characterList = [
     ...new Set(
-      eventChoicesConfig.flatMap((event) =>
-        event.character_name
+      eventChoicesConfig.flatMap((event) => {
+        const nameStr = event.character_name || "";
+        return nameStr
           .toLowerCase()
           .split(",")
           .map((name) => name.trim())
-          .filter((name) => name !== "" && !name.includes("Tracen Academy".toLowerCase()))
-      )
+          .filter((name) => name !== "" && !name.includes("tracen academy"));
+      })
     ),
   ];
 
