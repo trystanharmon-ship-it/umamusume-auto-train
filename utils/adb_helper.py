@@ -3,89 +3,57 @@ import subprocess
 
 import cv2
 import numpy as np
+from adbutils import adb
 
 
 class ADB:
-    def __init__(self, adb_dir="../adb", device_id="127.0.0.1:5555"):
+    def __init__(self, device_id="127.0.0.1:5555"):
         # Path to adb.exe inside the project
-        self.adb_path = os.path.join(os.path.dirname(__file__), adb_dir, "adb.exe")
         self.device_id = device_id
-
-    def run(self, cmd):
-        """
-        Execute adb command on the target device.
-        """
-        base_cmd = [self.adb_path]
-        if self.device_id:
-            base_cmd += ["-s", self.device_id]
-
-        result = subprocess.run(
-            base_cmd + cmd.split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        if result.stderr.strip():
-            print(f"[ADB ERROR] {result.stderr.strip()}")
-        return result.stdout.strip()
+        self.device = adb.device(device_id)
 
     def devices(self):
         """
         List all connected devices.
         """
-        return subprocess.run(
-            [self.adb_path, "devices"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        ).stdout.strip()
+        return adb.devices()
 
     def connect(self):
         """
         Connect to an emulator/device using device id.
         """
-        return subprocess.run(
-            [self.adb_path, "connect", self.device_id],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        ).stdout.strip()
+        adb.connect(self.device_id)
 
     def disconnect(self):
         """
         Disconnect a device.
         """
-        return subprocess.run(
-            [self.adb_path, "disconnect", self.device_id],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        ).stdout.strip()
+        adb.connect(self.device_id)
 
     def tap(self, x, y):
         """
         Simulate tap on screen.
         """
-        return self.run(f"shell input tap {x} {y}")
+        return self.device.click(x, y)
 
     def swipe(self, x1, y1, x2, y2, duration=300):
         """
         Simulate swipe from (x1,y1) to (x2,y2) within given duration (ms).
         """
-        return self.run(f"shell input swipe {x1} {y1} {x2} {y2} {duration}")
+        return self.device.swipe(x1, y1, x2, y2, duration)
 
     def long_tap(self, x, y, duration=3000):
         """
         Simulate long tap at (x, y).
         Duration in milliseconds.
         """
-        return self.run(f"shell input swipe {x} {y} {x} {y} {duration}")
+        return self.device.swipe(x, y, x, y, duration)
 
     def text(self, content):
         """
         Input text to the device.
         """
-        return self.run(f"shell input text {content}")
+        return self.device.send_keys(content)
 
     def screenshot(self, crop=None, save_path=None):
         """
@@ -97,14 +65,10 @@ class ADB:
         - crop: tuple (x1, y1, x2, y2) or None / left, top, right, bottom
         - save_path: str, e.g. 'screenshot.png'
         """
-        proc = subprocess.Popen(
-            [self.adb_path, "-s", "127.0.0.1:5555", "exec-out", "screencap", "-p"],
-            stdout=subprocess.PIPE,
-        )
-        data, _ = proc.communicate()
+        data = self.device.screenshot().convert('RGB')
 
         # Decode PNG bytes to NumPy array
-        img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(np.array(data, dtype=np.uint8), cv2.COLOR_RGB2BGR)
 
         if crop:
             x1, y1, x2, y2 = crop
