@@ -19,6 +19,7 @@ class EventManager:
         event_choices_icon = self.interaction.recognizer.match_template(
             template_path=get_icon("event_choice_1"), screen=screen
         )
+        choice_vertical_gap = 112
 
         if not event_choices_icon:
             return False
@@ -45,8 +46,13 @@ class EventManager:
             )
             return True
 
-        self.interaction.click_boxes(
-            event_choices_icon[chosen - 1],
+        x = event_choices_icon[0][0]
+        y = event_choices_icon[0][1] + ((chosen - 1) * choice_vertical_gap)
+        debug(f"Event choices coordinates: {event_choices_icon}")
+        debug(f"Clicking: {x}, {y}")
+        self.interaction.click_coordinates(
+            x,
+            y,
             text=f"Selecting optimal choice: {event_name}",
         )
         return True
