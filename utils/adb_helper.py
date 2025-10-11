@@ -28,7 +28,7 @@ class ADB:
         """
         Disconnect a device.
         """
-        adb.connect(self.device_id)
+        adb.disconnect(self.device_id)
 
     def tap(self, x, y):
         """
