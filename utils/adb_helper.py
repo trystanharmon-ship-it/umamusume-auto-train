@@ -36,13 +36,13 @@ class ADB:
         """
         return self.device.click(x, y)
 
-    def swipe(self, x1, y1, x2, y2, duration=300):
+    def swipe(self, x1, y1, x2, y2, duration=0.3):
         """
         Simulate swipe from (x1,y1) to (x2,y2) within given duration (ms).
         """
         return self.device.swipe(x1, y1, x2, y2, duration)
 
-    def long_tap(self, x, y, duration=3000):
+    def long_tap(self, x, y, duration=3):
         """
         Simulate long tap at (x, y).
         Duration in milliseconds.

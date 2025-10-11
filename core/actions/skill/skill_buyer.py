@@ -76,4 +76,4 @@ class SkillBuyer:
 
     def _scroll_skills(self):
         """Scroll skill list"""
-        self.interaction.swipe_for_scroll(distance=400, duration=700)
+        self.interaction.swipe_for_scroll(distance=400, duration=0.7)
