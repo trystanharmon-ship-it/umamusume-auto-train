@@ -65,7 +65,7 @@ class ADB:
         - crop: tuple (x1, y1, x2, y2) or None / left, top, right, bottom
         - save_path: str, e.g. 'screenshot.png'
         """
-        data = self.device.screenshot().convert('RGB')
+        data = self.device.screenshot(error_ok=False)
 
         # Decode PNG bytes to NumPy array
         img = cv2.cvtColor(np.array(data, dtype=np.uint8), cv2.COLOR_RGB2BGR)
