@@ -5,6 +5,7 @@ from logging.handlers import RotatingFileHandler
 
 logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
 logging.getLogger("pytesseract").setLevel(logging.ERROR)
+logging.getLogger('PIL').setLevel(logging.INFO)
 
 info = logging.info
 warning = logging.warning
