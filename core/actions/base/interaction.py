@@ -82,13 +82,13 @@ class Interaction:
         return clicked
 
     def swipe_between_points(
-        self, x1: int, y1: int, x2: int, y2: int, duration: int = 0.2
+        self, x1: int, y1: int, x2: int, y2: int, duration: float = 0.2
     ) -> bool:
         """Swipe between two coordinate points"""
         return self.input.swipe(x1, y1, x2, y2, duration)
 
     def swipe_between_elements(
-        self, from_element, to_element, duration: int = 0.2
+        self, from_element, to_element, duration: float = 0.2
     ) -> bool:
         """Swipe from one UI element to another"""
         from_center = helper.get_center(from_element)
@@ -102,7 +102,7 @@ class Interaction:
         start_x: int = 400,
         start_y: int = 850,
         distance: int = 250,
-        duration: int = 0.7,
+        duration: float = 0.7,
     ) -> bool:
         """Swipe up from position"""
         return self.swipe_between_points(
@@ -110,7 +110,7 @@ class Interaction:
         )
 
     def swipe_for_scroll(
-        self, start_x: int = 400, start_y: int = 850, distance: int = 250, duration=0.4
+        self, start_x: int = 400, start_y: int = 850, distance: int = 250, duration: float = 0.4
     ) -> bool:
         """Standard swipe for scrolling lists (default value is for race list scrolling)"""
         success = False
