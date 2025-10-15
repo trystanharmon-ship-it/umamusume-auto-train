@@ -31,7 +31,7 @@ class Input:
             log.error(f"Tap failed at ({x}, {y}): {e}")
             return False
 
-    def swipe(self, x1, y1, x2, y2, duration=200):
+    def swipe(self, x1, y1, x2, y2, duration=0.2):
         if self._should_stop():
             log.debug("Bot stopped - skipping swipe")
             return False

@@ -1,4 +1,5 @@
 # core/ocr.py
+import os
 import re
 import numpy as np
 import pytesseract
@@ -7,9 +8,8 @@ import pytesseract
 class OCR:
     def __init__(self):
         # Path to tesseract.exe
-        pytesseract.pytesseract.tesseract_cmd = (
-            r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-        )
+        if os.name == 'nt':
+            pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
     def extract_text(self, img: np.ndarray) -> str:
         """Extract text"""
