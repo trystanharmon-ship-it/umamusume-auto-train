@@ -28,7 +28,13 @@ class Recognizer:
                 filtered.append((x, y, w, h))
         return filtered
 
-    def match_template(self, region=None, template_path: str = None, screen=None):
+    def match_template(
+        self,
+        region=None,
+        template_path: str = None,
+        screen=None,
+        grayscale: bool = False,
+    ):
         """
         Perform template matching on the given screen.
 
@@ -38,6 +44,7 @@ class Recognizer:
             region: optional crop region (x, y, w, h)
             template_path: path to template image
             screen: screenshot image as np.array
+            grayscale: whether to perform matching in grayscale mode
         """
         if screen is None:
             raise ValueError("No screen value provided.")
@@ -46,10 +53,18 @@ class Recognizer:
             screen = helper.crop_screen(screen, region)
 
         # Load template
-        template = cv2.imread(template_path, cv2.IMREAD_COLOR)
+        template = cv2.imread(template_path, cv2.IMREAD_UNCHANGED)
+
+        # Convert template if it has alpha
         if template.shape[2] == 4:
             template = cv2.cvtColor(template, cv2.COLOR_BGRA2BGR)
 
+        # Convert both images to grayscale if requested
+        if grayscale:
+            screen = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
+            template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+
+        # Perform template matching
         result = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
         loc = np.where(result >= self.threshold)
 

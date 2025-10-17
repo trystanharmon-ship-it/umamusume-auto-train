@@ -13,18 +13,12 @@ PWR_STAT_REGION = (500, 723, 52, 20)
 GUTS_STAT_REGION = (595, 723, 52, 20)
 WIT_STAT_REGION = (690, 723, 52, 20)
 
-SPD_FAILURE_REGION = (295, 790, 75, 825 - 790)
-STA_FAILURE_REGION = (405, 790, 75, 825 - 790)
-PWR_FAILURE_REGION = (510, 790, 75, 825 - 790)
-GUTS_FAILURE_REGION = (615, 790, 75, 825 - 790)
-WIT_FAILURE_REGION = (723, 790, 75, 825 - 790)
-
 TRAINING_ICON_COORD = {
-    "spd": (180, 910),
-    "sta": (290, 910),
-    "pwr": (400, 910),
-    "guts": (510, 910),
-    "wit": (620, 910),
+    "spd": (180, 940),
+    "sta": (290, 940),
+    "pwr": (400, 940),
+    "guts": (510, 940),
+    "wit": (620, 940),
 }
 
 # LEFT TOP RIGHT BOTTOM

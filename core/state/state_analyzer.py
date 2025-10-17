@@ -5,6 +5,7 @@ from core.ocr import OCR
 from core.recognizer import Recognizer
 from utils import helper, constants, log
 
+
 class StateAnalyzer:
     def __init__(self, ocr: OCR, recognizer: Recognizer):
         self.ocr = ocr
@@ -21,6 +22,7 @@ class StateAnalyzer:
             "s": "5",
             "Z": "2",
             "z": "2",
+            "A": "4",
             "B": "8",
             "b": "8",
         }
@@ -183,27 +185,43 @@ class StateAnalyzer:
             log.warning("Couldn't find energy bar")
             return -1, -1
 
-    def _check_failure(self, screen=None, region=None):
-        img = helper.crop_screen(screen, region)
-        img = helper.enhance_img(img)
-        failure_text = self.ocr.extract_text(img)
-        log.debug(f"Failure text debug: '{failure_text}'")
+    def _check_failure(self, screen=None):
+        try:
+            percentage_img = self.recognizer.match_template(
+                template_path="assets/icons/percentage.png",
+                screen=screen,
+                grayscale=True,
+            )
+            if not percentage_img:
+                raise ValueError("Percentage image not found.")
+            x, y, w, h = percentage_img[0]
+            failure_region = (x - 50, y, w + 50, h)
+        except Exception as e:
+            raise ValueError(f"Cannot locate percentage image: {e}")
 
-        cleaned_text = failure_text
-        for wrong, correct in self.digit_replacement.items():
-            cleaned_text = cleaned_text.replace(wrong, correct)
+        try:
+            img = helper.crop_screen(screen, failure_region)
+            img = helper.enhance_img(img, threshold=200)
+            failure_text = self.ocr.extract_text(img)
+            log.debug(f"Failure text debug: '{failure_text}'")
 
-        log.debug(f"Cleaned text: '{cleaned_text}'")
+            cleaned_text = failure_text
+            for wrong, correct in self.digit_replacement.items():
+                cleaned_text = cleaned_text.replace(wrong, correct)
 
-        # Extract digits
-        match_digits = re.search(r"(\d+)", cleaned_text)
+            log.debug(f"Cleaned text: '{cleaned_text}'")
 
-        if match_digits:
-            digits = match_digits.group(1)
-            log.debug(f"Digits: {digits}")
-            return int(digits)
+            # Extract digits
+            match_digits = re.search(r"(\d+)", cleaned_text)
 
-        return -1
+            if match_digits:
+                digits = match_digits.group(1)
+                log.debug(f"Digits: {digits}")
+                return int(digits)
+
+            return -1
+        except Exception as e:
+            raise ValueError(f"Cannot extract failure text: {e}")
 
     def _check_status_effects(self, screen):
         status_effects_screen = helper.enhance_img(screen)

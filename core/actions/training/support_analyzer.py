@@ -8,7 +8,7 @@ import core.config as config
 import utils.constants as constants
 from utils import assets_repository
 from utils.log import info, warning, error, debug
-from utils.helper import sleep, get_secs, get_center
+from utils.helper import sleep
 
 
 class SupportAnalyzer:
@@ -111,38 +111,29 @@ class SupportAnalyzer:
         return count_result
 
     def check_training(self):
-        failure_regions = {
-            "spd": constants.SPD_FAILURE_REGION,
-            "sta": constants.STA_FAILURE_REGION,
-            "pwr": constants.PWR_FAILURE_REGION,
-            "guts": constants.GUTS_FAILURE_REGION,
-            "wit": constants.WIT_FAILURE_REGION,
-        }
         results = {}
 
         # failcheck enum "train","no_train","check_all"
         failcheck = "check_all"
         margin = 5
-        x1, y1 = 400, 540
+        x1, y1 = 50, 940
         for key, coord in constants.TRAINING_ICON_COORD.items():
 
             # pos = self.interaction.recognizer.locate_on_screen(
             #     icon_path, max_search_time=2
             # )
-            sleep(0.5)
             cx, cy = coord
-            self.interaction.swipe_between_points(x1, y1, cx, cy)
+            self.interaction.swipe_between_points(x1, y1, cx, cy, 0.1)
             sleep(0.2)
+            x1 = cx
+            y1 = cy
 
             screen = self.interaction.input.take_screenshot()
             support_card_results = self.check_support_card(screen=screen)
-            failure_region = failure_regions.get(key)
 
             if key != "wit":
                 if failcheck == "check_all":
-                    failure_chance = self.state_analyzer._check_failure(
-                        screen, failure_region
-                    )
+                    failure_chance = self.state_analyzer._check_failure(screen)
                     if failure_chance > (config.MAX_FAILURE + margin):
                         info("Failure rate too high skip to check wit")
                         failcheck = "no_train"
@@ -161,9 +152,7 @@ class SupportAnalyzer:
                 if failcheck == "train":
                     failure_chance = failure_chance  # 0
                 else:
-                    failure_chance = self.state_analyzer._check_failure(
-                        screen, failure_region
-                    )
+                    failure_chance = self.state_analyzer._check_failure(screen)
 
             support_card_results["failure"] = failure_chance
             results[key] = support_card_results
