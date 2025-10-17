@@ -32,6 +32,8 @@ class SkillManager:
         if not self.navigation.go_to_skills():
             return False
 
+        sleep(0.5)
+
         success = self.buyer.buy_skills(config.SKILL_LIST)
 
         if success:
