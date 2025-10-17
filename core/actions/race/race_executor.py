@@ -30,10 +30,12 @@ class RaceExecutor:
                 self._skip_race_results(view_result)
             else:
                 self._watch_race()
+        else:
+            debug("View result button not found.")
 
     def _skip_race_results(self, view_result):
         """Skip race results quickly"""
-        self.interaction.click_boxes(view_result, clicks=3)
+        self.interaction.click_boxes(view_result, clicks=3, text="Click view results")
         sleep(0.5)
 
         # Click center multiple times to skip animations

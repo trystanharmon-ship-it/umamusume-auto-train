@@ -85,3 +85,4 @@ class PositionManager:
         self.interaction.click_element(
             assets_repository.get_button("confirm_btn"), max_search_time=get_secs(2)
         )
+        sleep(0.5)
