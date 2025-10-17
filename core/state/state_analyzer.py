@@ -168,7 +168,7 @@ class StateAnalyzer:
             )
 
             empty_energy_pixel_count = self.recognizer.count_pixels_of_color(
-                [117, 117, 117], MAX_ENERGY_BBOX, screen=screen
+                [115, 115, 115], MAX_ENERGY_BBOX, screen=screen, tolerance=6
             )
 
             total_energy_length = energy_bar_length - 1
