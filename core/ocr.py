@@ -5,7 +5,7 @@ import re
 from typing import List, Tuple
 from utils.screenshot import enhance_image_for_ocr_2, enhance_image_for_ocr
 
-reader = easyocr.Reader(["en"], gpu=False)
+reader = easyocr.Reader(["en"], gpu=True)
 
 def extract_text(pil_img: Image.Image) -> str:
   img_np = np.array(pil_img)
